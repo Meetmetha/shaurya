@@ -172,4 +172,4 @@ sleep 2
 cat $2-allurls.txt | gf aws-keys | tee -a $2-awskeys.txt
 
 find . -type f -size 0 -delete
-echo -e "${BOLD}\nAll your outputs are save in ${GREEN}$2/ \n"
+echo -e "${BOLD}\nAll your outputs are saved in ${GREEN}$2/ \n"
