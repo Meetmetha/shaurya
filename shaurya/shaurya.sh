@@ -90,7 +90,7 @@ sleep 2
 
 echo -e "${NORMAL}Starting ${GREEN}NMAP${NORMAL} on alive domains..."
 mkdir nmapoutput
-for domain in $(cat $2-alive.txt)
+for domain in $(cat $2-finalsubdomains.txt)
 do
         nmap -sC -sV -v $domain | tee nmapoutput/$domain
 done
