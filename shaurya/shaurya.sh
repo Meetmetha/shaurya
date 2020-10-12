@@ -88,14 +88,6 @@ echo -e "${NORMAL}Eyewitness Snapshot of each Live subdomain ${NORMAL} ..."
 python3 ~/tools/EyeWitness/Python/EyeWitness.py -f $2-alive.txt --no-prompt --web --timeout 15 
 sleep 2
 
-echo -e "${NORMAL}Starting ${GREEN}NMAP${NORMAL} on alive domains..."
-mkdir nmapoutput
-for domain in $(cat $2-finalsubdomains.txt)
-do
-        nmap -sC -sV -v $domain | tee nmapoutput/$domain
-done
-sleep 2
-
 echo -e "${NORMAL}Finished Takeover ${GREEN}Getting CNames,Title,Statuscodes & IP${NORMAL} ..."
 cat $2-alive.txt | httpx -silent -title -status-code -cname -ip| tr "[]" " " > $2-httpxoverview.txt
 sleep 2
@@ -125,6 +117,11 @@ echo -e "${NORMAL}${BOLD}Starting ${GREEN}Gau (Get all Urls)${NORMAL}${BOLD} par
 sleep 2
 cat $2-finalsubdomains.txt | gau > $2-gau.txt
 sort -u $2-waybackurls.txt $2-gau.txt > $2-allurls.txt #Combining Results of Gospider,Wayback,Gau
+
+
+echo -e "Starting ${GREEN}Dalfox${NORMAL} for XSS on $1... ${NORMAL}"
+gospider -S $2-alive.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" -a | grep -e "code-200" | awk '{print $5}'|grep "=" | qsreplace -a | dalfox pipe -o $2-dalfox.txt
+sleep 2
 
 echo -e "Starting ${GREEN}XSS${NORMAL} param filtering on $1... ${NORMAL} "
 sleep 2
@@ -161,11 +158,6 @@ cat $2-allurls.txt | gf idor > $2-idor.txt
 echo -e "Starting ${GREEN}AWS S3 Buckets${NORMAL} param filtering on $1... ${NORMAL} "
 sleep 2
 cat $2-allurls.txt | gf s3-buckets | tee -a $2-s3buckets.txt
-
-echo -e "Starting ${GREEN}PHP Errors${NORMAL} param filtering on $1... ${NORMAL} "
-sleep 2
-cat $2-allurls.txt | gf php-errors | tee -a $2-Phperrors.txt
-
 
 echo -e "Starting ${GREEN}AWS Keys${NORMAL} param filtering on $1... ${NORMAL} "
 sleep 2
