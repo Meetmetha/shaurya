@@ -112,7 +112,6 @@ sleep 2
 
 
 
-
 echo -e "${NORMAL}Starting ${GREEN}Nuclei CVE Scan${NORMAL}"
 cat $2-alive.txt | nuclei -t ~/tools/nuclei-templates/cves -o $2-nucleiCVES.txt
 sleep 2
@@ -202,7 +201,9 @@ echo -e "${NORMAL}Starting ${GREEN}Jaeles PassiveKeys Scan on ${NORMAL} alive do
 jaeles scan -c 50 -s /root/.jaeles/passives -U $2-alive.txt -o $2-jaelesPassive
 sleep 2
 
-
+echo -e "${NORMAL}Starting ${GREEN}Jaeles Extra External Scans on ${NORMAL} alive domains"
+jaeles scan -c 50 -s  ~/tools/jaelesexternal -U $2-alive.txt -o $2-jaelesexternal
+sleep 2
 
 ###################################Finsihed Nuclei and Jaeles##########################################
 
@@ -258,9 +259,8 @@ interlace -tL $2-liveJSFiles.txt -threads 5 -c "python3 ~/tools/secretfinder/Sec
 
 
 echo -e "Starting ${GREEN}403 Bypass Check${NORMAL} on $1... ${NORMAL} "
-mkdir 403Bypass
 cat $2-allurls.txt $2-alive.txt $2-JSendpoints.txt | httpx -follow-redirects -silent -status-code -mc 403,401,402 | cut -d ' ' -f1 | sort -u > $2-403StatusUrls.txt
-cat $2-403StatusUrls.txt | while read domain;do bash ~/tools/Bug-Bounty-Scripts/403-forbidden-bypass.sh $domain ;done | grep -v "403" 
+cat $2-403StatusUrls.txt | while read domain;do bash ~/tools/Bug-Bounty-Scripts/403-forbidden-bypass.sh $domain ;done | grep -v "403" > $2-403Bypass.txt
 #add $1 on line 43 as such echo "Staring! please wait... $1" to get better Resul Output with domain name
 
 echo -e "Starting ${GREEN}XSS without GF via qsreplace${NORMAL} on $1... ${NORMAL} "
@@ -278,8 +278,8 @@ cat $2-alive.txt | while read domain;do python3 ~/tools/ParamSpider/paramspider.
 mv output/https\:/  paramspider
 sudo rm -r output
 cat ./paramspider/*txt > $2-paramsDalfoxInput.txt
-dalfox -b randommeet.xss.ht file $2-paramDalfoxInput.txt -o $2-paramDalfoxXSSOutput.txt
-
+sudo rm -r paramspider
+cat  $2-paramDalfoxInput.txt | dalfox -b randommeet.xss.ht -o $2-paramDalfoxXSSOutput.txt
 
 
 echo -e "Starting ${GREEN}XSS oneliner with Dalfox${NORMAL} on $1... ${NORMAL} "
@@ -293,4 +293,5 @@ cat $2-allurls.txt |grep '=' |qsreplace "' OR '1" | httpx -silent -threads 100 |
 find . -type f -size 0 -delete
 echo -e "${BOLD}\nAll your outputs are saved in ${GREEN}$2/ \n"
 
-
+#not running Get "zen-paramDalfoxInput.txt": unsupported protocol scheme ""
+#zen-paramDalfoxInput.txt"

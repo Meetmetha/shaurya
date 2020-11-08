@@ -34,6 +34,7 @@ GO111MODULE=on go get -u -v github.com/projectdiscovery/naabu/v2/cmd/naabu
 go get -u github.com/tomnomnom/httprobe
 GO111MODULE=on go get github.com/jaeles-project/jaeles
 jaeles config init
+git clone https://github.com/ghsec/ghsec-jaeles-signatures.git jaelesexternal
 go get github.com/tomnomnom/waybackurls
 GO111MODULE=on go get -u -v github.com/lc/gau
 go get -u github.com/tomnomnom/gf
