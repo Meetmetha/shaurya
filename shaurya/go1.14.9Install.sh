@@ -1,17 +1,15 @@
-sudo apt-get update
-sudo apt install curl
-curl -O https://dl.google.com/go/go1.14.9.linux-amd64.tar.gz
-tar xvf go1.14.9.linux-amd64.tar.gz
-sudo chown -R root:root ./go
-sudo mv go /usr/local
-sudo rm -r go1.14.9.linux-amd64.tar.gz
-echo "
-export GOPATH=$HOME/go
-export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
-" >> ~/.profile
-source ~/.profile;
-echo "
-export GOROOT=/usr/lib/go
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-" >> ~/.bashrc
+sudo apt-get update; 
+#remove old version of go-lang 
+sudo rm -rf /usr/local/go; 
+sudo rm -rf /root/go; 
+wget -c https://golang.org/dl/go1.15.2.linux-amd64.tar.gz
+shasum -a 256 go1.15.2.linux-amd64.tar.gz;
+tar -C /usr/local -xvzf go1.15.2.linux-amd64.tar.gz
+mkdir -p ~/go/{bin,src,pkg}
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bash_profile;
+echo 'export GOPATH="/root/go"' >> ~/.bash_profile;
+echo 'export GOBIN=$GOPATH/bin' >> ~/.bash_profile;
+echo 'export GOROOT=/usr/local/go' >> ~/.bash_profile;
+echo 'export PATH=$PATH:$GOROOT/bin' >> ~/.bash_profile;
+source ~/.bash_profile
+cp /usr/local/go/bin/go /usr/local/bin/; 
