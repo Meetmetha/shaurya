@@ -73,19 +73,6 @@ go get -u github.com/hahwul/dalfox
 go get -u github.com/jaeles-project/gospider
 go get -u github.com/vsec7/urlive
 git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap
-
-
-
-
-
-
-
-
-
-
-
-
-
 GO111MODULE=on go get -v github.com/projectdiscovery/subfinder/cmd/subfinder;
 go get github.com/tomnomnom/hacks/waybackurls;
 GO111MODULE=on go get -u -v github.com/hahwul/dalfox;
